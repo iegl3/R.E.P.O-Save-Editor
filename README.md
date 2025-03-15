@@ -9,11 +9,32 @@ This tool is built using `CustomTkinter`, `Pillow`, and other libraries, providi
 
 ## Features
 
-- **Edit Game Save Data**: Modify values like currency, lives, player health, and more.
-- **JSON Editing**: Advanced tab for editing the raw JSON data with syntax highlighting for ease of use.
-- **Save & Load**: Load existing save data and save changes to a file.
+- **Decrypt and Load `.es3` Save Files**: Open `.es3` files and decrypt them for editing.
+- **Edit Game Data**: View and modify player stats, world stats, and more in a user-friendly interface.
+- **JSON-Based Editing**: Convert decrypted `.es3` data to JSON for easy editing and saving.
+- **Re-Encrypt and Save**: Save the edited data back into `.es3` format after re-encrypting it.
 
-## Installation
+
+### How to Use
+
+1. **Download the latest release**:  
+   Go to the [Releases page](https://github.com/yourusername/R.E.P.O-Save-Editor/releases) and download the latest version of the tool.
+
+2. **Open a `.es3` file**:  
+   Click on the "File" menu, then choose "Open". Select your `.es3` save file. The tool will decrypt and load the data into a JSON format for editing.
+
+3. **Edit the Data**:  
+   You can now modify values such as player health, currency, or any other editable fields in the game data.
+
+4. **Save Changes**:  
+   After editing the data, click "Save" to save the changes back to the `.es3` file. The edited JSON data is re-encrypted and saved in the `.es3` format.
+
+## Contributions
+
+Feel free to fork the repository and submit pull requests for any improvements or bug fixes!
+
+---
+
 
 ### For Developers
 
