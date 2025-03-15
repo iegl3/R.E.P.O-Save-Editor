@@ -8,12 +8,12 @@ version = "1.0.0"
 file = None
 players = [
     {
-        'name': 'Player 1',
-        'health': 100,
+        'name': 'NoedL',
+        'health': 130,
     },
     {
-        'name': 'Player 2',
-        'health': 100,
+        'name': 'Spongebob',
+        'health': 110,
     }
 ]
 
@@ -42,6 +42,7 @@ tabview.pack(fill=BOTH, expand=1)
 tabview.add("World")
 tabview.add("Player")
 tabview.add("Advanced")
+
 
 tabview.grid(row=0, column=0, padx=5, pady=5)
 
@@ -117,14 +118,72 @@ class MyCheckboxFrame(CTkFrame):
 player_frames = []
 for i, player in enumerate(players):
     frame = CTkFrame(tabview.tab("Player"), fg_color="gray20", corner_radius=6)
-    frame.grid(row=i//2, column=i%2, padx=10, pady=(10, 0), sticky="ew")
+    frame.grid(row=i//2, column=i%2, padx=10, pady=10, sticky="ew")
     player_frames.append(frame)
-    
-    title = CTkLabel(frame, text=player['name'], fg_color="gray30", corner_radius=6)
-    title.grid(row=0, column=0, padx=10, pady=(10, 10), sticky="ew")
-    
-    health_label = CTkLabel(frame, text=f"Health: {player['health']}", fg_color="gray30", corner_radius=6)
-    health_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+
+    inner_frame = CTkFrame(frame, fg_color="gray20", corner_radius=6)
+    inner_frame.pack(fill=BOTH, expand=True, padx=10, pady=5)
+
+    title = CTkLabel(inner_frame, text=player['name'], corner_radius=6)
+    title.pack(fill=BOTH, expand=True, padx=10, pady=(10, 10))
+
+    inner_inner_frame = CTkFrame(inner_frame, fg_color="gray20", corner_radius=6)
+    inner_inner_frame.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
+
+    health_label = CTkLabel(inner_inner_frame, text=f"Health: ", corner_radius=6)
+    health_label.grid(row=0, column=0, padx=10, pady=(0, 10), sticky="w")
+
+    health_entry = CTkEntry(inner_inner_frame, width=36)
+    health_entry.grid(row=0, column=1, padx=10, pady=(0, 10), sticky="e")
+    health_entry.insert(0, player['health'])
+
+    HealthUpgrade_label = CTkLabel(inner_inner_frame, text=f"Health Upgrade: ", corner_radius=6)
+    HealthUpgrade_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+
+    HealthUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    HealthUpgrade_entry.grid(row=1, column=1, padx=10, pady=(0, 10), sticky="e")
+
+    StaminaUpgrade_label = CTkLabel(inner_inner_frame, text=f"Stamina Upgrade: ", corner_radius=6)
+    StaminaUpgrade_label.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="w")
+
+    StaminaUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    StaminaUpgrade_entry.grid(row=2, column=1, padx=10, pady=(0, 10), sticky="e")
+
+    ExtraJumpUpgrade_label = CTkLabel(inner_inner_frame, text=f"Extra Jump Upgrade: ", corner_radius=6)
+    ExtraJumpUpgrade_label.grid(row=3, column=0, padx=10, pady=(0, 10), sticky="w")
+
+    ExtraJumpUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    ExtraJumpUpgrade_entry.grid(row=3, column=1, padx=10, pady=(0, 10), sticky="e")
+
+    LaunchUpgrade_label = CTkLabel(inner_inner_frame, text=f"Launch Upgrade: ", corner_radius=6)
+    LaunchUpgrade_label.grid(row=0, column=2, padx=10, pady=(0, 10), sticky="w")
+
+    LaunchUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    LaunchUpgrade_entry.grid(row=0, column=3, padx=10, pady=(0, 10), sticky="e")
+
+    MapPlayerCount_label = CTkLabel(inner_inner_frame, text=f"Map Player Count: ", corner_radius=6)
+    MapPlayerCount_label.grid(row=1, column=2, padx=10, pady=(0, 10), sticky="w")
+
+    MapPlayerCount_entry = CTkEntry(inner_inner_frame, width=36)
+    MapPlayerCount_entry.grid(row=1, column=3, padx=10, pady=(0, 10), sticky="e")
+
+    SpeedUpgrade_label = CTkLabel(inner_inner_frame, text=f"Speed Upgrade: ", corner_radius=6)
+    SpeedUpgrade_label.grid(row=2, column=2, padx=10, pady=(0, 10), sticky="w")
+
+    SpeedUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    SpeedUpgrade_entry.grid(row=2, column=3, padx=10, pady=(0, 10), sticky="e")
+
+    RangeUpgrade_label = CTkLabel(inner_inner_frame, text=f"Range Upgrade: ", corner_radius=6)
+    RangeUpgrade_label.grid(row=3, column=2, padx=10, pady=(0, 10), sticky="w")
+
+    RangeUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    RangeUpgrade_entry.grid(row=3, column=3, padx=10, pady=(0, 10), sticky="e")
+
+    ThrowUpgrade_label = CTkLabel(inner_inner_frame, text=f"Throw Upgrade: ", corner_radius=6)
+    ThrowUpgrade_label.grid(row=4, column=2, padx=10, pady=(0, 10), sticky="w")
+
+    ThrowUpgrade_entry = CTkEntry(inner_inner_frame, width=36)
+    ThrowUpgrade_entry.grid(row=4, column=3, padx=10, pady=(0, 10), sticky="e")
 
 def update_json(event):
     try:
