@@ -19,8 +19,6 @@ print(CACHE_DIR)
 version = "1.0.0"
 file = None
 players = [
-    {'id': '76561199230772243', 'name': 'NoedL', 'health': 130},
-    {'id': '76561199025920273', 'name': 'Spongebob', 'health': 110}
 ]
 
 json_data = {
@@ -642,16 +640,20 @@ def fetch_steam_profile_picture(player_id):
 
 def fetch_playerdata():
     """ Fetch player data from the JSON data. """
-    player_data = json_data['playerHealth']
-    players = []
-    for player_id, health in player_data.items():
-        player = {
-            'id': player_id,
-            'name': json_data['playerNames']['value'].get(player_id, "Unknown"),
-            'health': health
-        }
-        players.append(player)
-    return players
+    fetched_players = {}
+    for player_id, player_name in json_data["playerNames"]["value"].items():
+        fetched_players[player_id] = player_name
+
+    # Save the fetched_players dictionary back to the JSON data
+    json_data["playerNames"]["value"] = fetched_players
+
+    for player_id, player_name in fetched_players.items():
+        player_health = json_data.get("playerHealth", {}).get(player_id, 100)  # Default health to 100 if not found
+        players.append({"id": player_id, "name": player_name, "health": player_health})
+    
+    print(players)
+
+fetch_playerdata()
 
 for player in players:
     frame = CTkFrame(frame_player, corner_radius=6)
