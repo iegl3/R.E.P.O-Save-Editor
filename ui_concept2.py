@@ -18,8 +18,7 @@ print(CACHE_DIR)
 # Version and player data
 version = "1.0.0"
 file = None
-players = [
-]
+players = []
 
 json_data = {
     "dictionaryOfDictionaries": {
@@ -638,22 +637,16 @@ def fetch_steam_profile_picture(player_id):
 
     return "example.png"  # Default profile picture
 
-def fetch_playerdata():
-    """ Fetch player data from the JSON data. """
-    fetched_players = {}
-    for player_id, player_name in json_data["playerNames"]["value"].items():
-        fetched_players[player_id] = player_name
+fetched_players = {}
+for player_id, player_name in json_data["playerNames"]["value"].items():
+    fetched_players[player_id] = player_name
 
-    # Save the fetched_players dictionary back to the JSON data
-    json_data["playerNames"]["value"] = fetched_players
+# Save the fetched_players dictionary back to the JSON data
+json_data["playerNames"]["value"] = fetched_players
 
-    for player_id, player_name in fetched_players.items():
-        player_health = json_data.get("playerHealth", {}).get(player_id, 100)  # Default health to 100 if not found
-        players.append({"id": player_id, "name": player_name, "health": player_health})
-    
-    print(players)
-
-fetch_playerdata()
+for player_id, player_name in fetched_players.items():
+    player_health = json_data["dictionaryOfDictionaries"]["value"]["playerHealth"][player_id]
+    players.append({"id": player_id, "name": player_name, "health": player_health})
 
 for player in players:
     frame = CTkFrame(frame_player, corner_radius=6)
@@ -728,11 +721,11 @@ def update_json(event):
     except json.JSONDecodeError as e:
         print("Invalid JSON:", e)
 
-frame_advanced = CTkFrame(tabview.tab("Advanced"))
+frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
 frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
 CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, pady=3)
 
-textbox = Text(frame_advanced, font=("Courier", 10), height=12, wrap="word", bg="#2b2b2b", fg="white", insertbackground="white")
+textbox = Text(frame_advanced, font=("Courier", 10), height=12, wrap="word", bg="#2b2b2b", fg="white", bd=0, highlightthickness=0, insertbackground="white")
 textbox.pack(fill=BOTH, expand=True, padx=5, pady=5)
 textbox.bind("<KeyRelease>", update_json)
 textbox.insert("1.0", json.dumps(json_data, indent=4))
