@@ -1,0 +1,12 @@
+{
+    "players": [
+        {
+            "name": "NoedL",
+            "health": 131
+        },
+        {
+            "name": "Spongebob",
+            "health": 110
+        }
+    ]
+}

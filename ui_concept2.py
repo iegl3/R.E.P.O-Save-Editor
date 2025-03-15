@@ -570,22 +570,39 @@ tabview.add("World")
 tabview.add("Player")
 tabview.add("Advanced")
 
-# ========== World Tab ==========
+# ========== World Tab ========== 
 frame_world = CTkFrame(tabview.tab("World"))
 frame_world.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
-def create_entry(label, parent, color):
+def create_entry(label, parent, color, update_callback=None):
     frame = CTkFrame(parent, fg_color=color)
     frame.pack(fill="x", pady=3)
     CTkLabel(frame, text=label, font=font).pack(side="left", padx=5)
     entry = CTkEntry(frame, font=font, width=100)
     entry.pack(side="right", padx=5)
+    
+    if update_callback:
+        entry.bind("<KeyRelease>", update_callback)
+    
     return entry
 
-entry_currency = create_entry("Currency:", frame_world, "#292929")
-entry_lives = create_entry("Lives:", frame_world, "#292929")
-entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929")
-entry_haul = create_entry("Total Haul:", frame_world, "#292929")
+# Callback to update json_data when the entry value changes
+def update_json_data(event):
+    """ Update json_data when an entry value is modified. """
+    json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'] = int(entry_charging.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
+
+    # Update the JSON viewer
+    textbox.delete("1.0", "end")
+    textbox.insert("1.0", json.dumps(json_data, indent=4))
+    highlight_json()
+
+entry_currency = create_entry("Currency:", frame_world, "#292929", update_json_data)
+entry_lives = create_entry("Lives:", frame_world, "#292929", update_json_data)
+entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929", update_json_data)
+entry_haul = create_entry("Total Haul:", frame_world, "#292929", update_json_data)
 
 entry_currency.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['currency'])
 entry_lives.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['lives'])
@@ -604,10 +621,10 @@ frame_player.pack(fill=BOTH, expand=True, padx=10, pady=10)
 player_entries = {}
 
 def fetch_steam_profile_picture(player_id):
-    """Fetch and cache Steam profile picture."""
-    cached_image_path = os.path.join(CACHE_DIR, f"{player_id}.png")
-    if os.path.exists(cached_image_path):
-        return cached_image_path  # Return cached image if available
+    """Fetch and cache Steam profile picture in the cache folder."""
+    cached_image_path = CACHE_DIR / f"{player_id}.png"
+    if cached_image_path.exists():
+        return str(cached_image_path)  # Return cached image if available
 
     url = f"https://steamcommunity.com/profiles/{player_id}/?xml=1"
     response = requests.get(url)
@@ -619,9 +636,22 @@ def fetch_steam_profile_picture(player_id):
             img_data = requests.get(img_url).content
             with open(cached_image_path, 'wb') as file:
                 file.write(img_data)
-            return cached_image_path  # Return the cached file path
+            return str(cached_image_path)  # Return the cached file path
 
     return "example.png"  # Default profile picture
+
+def fetch_playerdata():
+    """ Fetch player data from the JSON data. """
+    player_data = json_data['playerHealth']
+    players = []
+    for player_id, health in player_data.items():
+        player = {
+            'id': player_id,
+            'name': json_data['playerNames']['value'].get(player_id, "Unknown"),
+            'health': health
+        }
+        players.append(player)
+    return players
 
 for player in players:
     frame = CTkFrame(frame_player, corner_radius=6)
@@ -674,11 +704,25 @@ def highlight_json():
         textbox.tag_add("boolean", start, end)
 
 def update_json(event):
-    """ Updates JSON and applies highlighting """
+    """ Updates JSON and applies highlighting. Also updates the entries accordingly. """
     try:
-        data = json.loads(textbox.get("1.0", "end-1c"))
-        print("JSON updated:", data)
-        highlight_json()
+        updated_data = json.loads(textbox.get("1.0", "end-1c"))
+        global json_data
+        json_data = updated_data  # Update the json_data with the new data from the JSON editor.
+
+        # Update UI entries based on the updated json_data
+        entry_currency.delete(0, "end")
+        entry_lives.delete(0, "end")
+        entry_charging.delete(0, "end")
+        entry_haul.delete(0, "end")
+
+        entry_currency.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['currency'])
+        entry_lives.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['lives'])
+        entry_charging.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
+        entry_haul.insert(0, json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
+        highlight_json()  # Reapply syntax highlighting
+
     except json.JSONDecodeError as e:
         print("Invalid JSON:", e)
 
@@ -689,7 +733,7 @@ CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, 
 textbox = Text(frame_advanced, font=("Courier", 10), height=12, wrap="word", bg="#2b2b2b", fg="white", insertbackground="white")
 textbox.pack(fill=BOTH, expand=True, padx=5, pady=5)
 textbox.bind("<KeyRelease>", update_json)
-textbox.insert("1.0", json.dumps(players, indent=4))
+textbox.insert("1.0", json.dumps(json_data, indent=4))
 
 textbox.tag_configure("key", foreground="#FFCC00")      # Yellow for keys
 textbox.tag_configure("string", foreground="#99CC99")   # Green for strings
@@ -702,43 +746,39 @@ highlight_json()
 
 def open_file():
     """ Open a file dialog and load JSON data. """
+    global file, json_data
     file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
     if file_path:
-        global file
         file = file_path
         with open(file, 'r') as f:
-            data = json.load(f)
-            update_ui_from_json(data)
+            json_data = json.load(f)
+            update_ui_from_json(json_data)
 
 def save_data():
     """ Save the current data to a file. """
     if file:
         with open(file, 'w') as f:
-            data = collect_data_from_ui()
-            json.dump(data, f, indent=4)
+            json.dump(json_data, f, indent=4)
             print("Data saved to", file)
     else:
         file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
         if file_path:
             with open(file_path, 'w') as f:
-                data = collect_data_from_ui()
-                json.dump(data, f, indent=4)
+                json.dump(json_data, f, indent=4)
                 print("Data saved to", file_path)
-
-def collect_data_from_ui():
-    """ Collect data from the UI to save it. """
-    data = {"players": []}
-    for player_name, health_entry in player_entries.items():
-        player_data = {"name": player_name, "health": int(health_entry.get())}
-        data["players"].append(player_data)
-    return data
 
 def update_ui_from_json(data):
     """ Update UI from loaded JSON data. """
-    for idx, player_data in enumerate(data.get("players", [])):
-        if idx < len(players):
-            player_entries[players[idx]['name']].delete(0, "end")
-            player_entries[players[idx]['name']].insert(0, player_data.get('health', 100))
+    entry_currency.delete(0, "end")
+    entry_lives.delete(0, "end")
+    entry_charging.delete(0, "end")
+    entry_haul.delete(0, "end")
+
+    entry_currency.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['currency'])
+    entry_lives.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['lives'])
+    entry_charging.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
+    entry_haul.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
 
 # ========== Footer ==========
 label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
