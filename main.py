@@ -11,6 +11,7 @@ import requests
 from xml.etree import ElementTree
 from PIL import Image
 from pathlib import Path
+import webbrowser
 
 CACHE_DIR = Path.home() / ".cache" / "noedl.xyz"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -19,6 +20,7 @@ print(CACHE_DIR)
 
 version = "1.0.0"
 json_data = {}
+savefile_dir = Path.home() / "AppData" / "LocalLow" / "semiwork" / "Repo" / "saves"
 
 root = CTk()
 root.geometry("900x540")
@@ -32,8 +34,14 @@ small_font = ("Arial", 9)
 
 menu = CTkTitleMenu(master=root)
 button_file = menu.add_cascade("File")
+button_help = menu.add_cascade("Help")
 dropdown1 = CustomDropdownMenu(widget=button_file)
 dropdown1.add_option(option="Open", command=lambda: open_file())
+dropdown2 = CustomDropdownMenu(widget=button_help)
+
+dropdown2.add_option(option="How to Use", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor#how-to-use"))
+dropdown2.add_option(option="About", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor"))
+dropdown2.add_option(option="Report Issue", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor/issues"))
 
 label = CTkLabel(root, text="No data loaded.", font=font)
 label.pack(fill=BOTH, expand=True)
@@ -166,19 +174,21 @@ def on_json_edit(event):
 
 def open_file():
     global json_data
-    file_path = filedialog.askopenfilename(filetypes=[("Game Save (.es3 file)", "*.es3")])
+    global savefilename
+    file_path = filedialog.askopenfilename(initialdir=savefile_dir, filetypes=[("Game Save (.es3 file)", "*.es3")])
     if file_path:        
         decrypted_data = decrypt_es3(file_path, "Why would you want to cheat?... :o It's no fun. :') :'D")
         json_data = json.loads(decrypted_data)
         update_ui_from_json(json_data)
+        savefilename = Path(file_path).name
         messagebox.showinfo("File Opened", f"Successfully opened: {file_path}")
 
 def save_data():
     if not json_data:
         messagebox.showerror("Error", "No data to save.")
         return
-    
-    file_path = filedialog.asksaveasfilename(defaultextension=".es3", filetypes=[("Game Save (.es3 file)", "*.es3")])
+
+    file_path = filedialog.asksaveasfilename(initialdir=savefile_dir, initialfile=savefilename, defaultextension=".es3", filetypes=[("Game Save (.es3 file)", "*.es3")])
     if file_path:
         encrypted_data = encrypt_es3(json.dumps(json_data, indent=4).encode('utf-8'), "Why would you want to cheat?... :o It's no fun. :') :'D")
         with open(file_path, 'wb') as f:

@@ -2,8 +2,8 @@ from customtkinter import *
 from tkinter import BOTH, Text, Toplevel, filedialog, messagebox
 from lib.CTkMenuBar import *
 from lib.CTkToolTip import *
-from decrypt import decrypt_es3
-from encrypt import encrypt_es3
+from lib.decrypt import decrypt_es3
+from lib.encrypt import encrypt_es3
 from datetime import datetime
 import json
 import re
