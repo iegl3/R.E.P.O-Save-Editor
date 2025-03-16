@@ -15,19 +15,19 @@ This tool is built using `CustomTkinter`, `Pillow`, and other libraries, providi
 - **Re-Encrypt and Save**: Save the edited data back into `.es3` format after re-encrypting it.
 
 
-### How to Use
+## How to Use  
 
 1. **Download the latest release**:  
-   Go to the [Releases page](https://github.com/yourusername/R.E.P.O-Save-Editor/releases) and download the latest version of the tool.
+   Go to the [Releases page](https://github.com/yourusername/R.E.P.O-Save-Editor/releases) and download the latest version of the tool.  
 
-2. **Open a `.es3` file**:  
-   Click on the "File" menu, then choose "Open". Select your `.es3` save file. The tool will decrypt and load the data into a JSON format for editing.
+2. **Open the save files folder**:  
+   Click on the "File" button, then choose "Open Save". The tool will automatically open in the save files directory. Select the folder of the save you want to edit, then choose the `.es3` file (not the backup version) to load. The tool will decrypt and load the data into a JSON format for editing.  
 
 3. **Edit the Data**:  
-   You can now modify values such as player health, currency, or any other editable fields in the game data.
+   Modify values such as player health, currency, or any other editable fields in the game data.  
 
 4. **Save Changes**:  
-   After editing the data, click "Save" to save the changes back to the `.es3` file. The edited JSON data is re-encrypted and saved in the `.es3` format.
+   After making your edits, click "Save" to apply the changes directly to the `.es3` file. The modified JSON data is re-encrypted and saved back in the same format.
 
 ## Contributions
 
@@ -38,7 +38,7 @@ Feel free to fork the repository and submit pull requests for any improvements o
 
 ### For Developers
 
-Make sure you have Python 3.8 or later installed. You can download Python from [here](https://www.python.org/downloads/).
+Make sure you have Python 3.8 or newer installed. You can download Python from [here](https://www.python.org/downloads/).
 
 To install the required dependencies, use the following command:
 
