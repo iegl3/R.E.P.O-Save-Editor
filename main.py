@@ -1,3 +1,4 @@
+import json, re, requests, webbrowser
 from customtkinter import *
 from tkinter import BOTH, Text, Toplevel, filedialog, messagebox
 from lib.CTkMenuBar import *
@@ -5,22 +6,32 @@ from lib.CTkToolTip import *
 from lib.decrypt import decrypt_es3
 from lib.encrypt import encrypt_es3
 from datetime import datetime
-import json
-import re
-import requests
 from xml.etree import ElementTree
 from PIL import Image
 from pathlib import Path
-import webbrowser
+
+DEBUGLEVEL = "INFO"
+
+if DEBUGLEVEL:
+    import logging
+    logging.basicConfig(level=DEBUGLEVEL)
+    ui_logger = logging.getLogger("customtkinter")
+    ui_logger.setLevel(DEBUGLEVEL)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(DEBUGLEVEL)
 
 CACHE_DIR = Path.home() / ".cache" / "noedl.xyz"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+CACHE_DIR.mkdir(parents=True, exist_ok=True) 
 
-print(CACHE_DIR)
+if DEBUGLEVEL:
+    logger.info("Cache directory created.")
 
 version = "1.0.0"
 json_data = {}
 savefile_dir = Path.home() / "AppData" / "LocalLow" / "semiwork" / "Repo" / "saves"
+
+if DEBUGLEVEL:
+    logger.info("Save file directory set. Path: " + str(savefile_dir))
 
 root = CTk()
 root.geometry("900x540")
@@ -41,7 +52,7 @@ dropdown2 = CustomDropdownMenu(widget=button_help)
 
 dropdown2.add_option(option="How to Use", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor#how-to-use"))
 dropdown2.add_option(option="About", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor"))
-dropdown2.add_option(option="Report Issue", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor/issues"))
+dropdown2.add_option(option="Report Issue", command=lambda: webbrowser.open("https://github.com/N0edL/R.E.P.O-Save-Editor/issues/new"))
 
 label = CTkLabel(root, text="No data loaded.", font=font)
 label.pack(fill=BOTH, expand=True)
@@ -50,8 +61,12 @@ def get_latest_version():
     try:
         response = requests.get(f"https://api.github.com/repos/N0edL/R.E.P.O-Save-Editor/releases/latest", timeout=5)
         data = response.json()
+        if DEBUGLEVEL:
+            logger.info("Latest version fetched from GitHub API. Version: " + data.get("tag_name", "Unknown"))
         return data.get("tag_name", "Unknown")
     except requests.exceptions.RequestException:
+        if DEBUGLEVEL:
+            logger.error("Failed to fetch latest version from GitHub API.")
         return "Unknown"
 
 if get_latest_version() != version:
@@ -77,6 +92,8 @@ def create_entry(label, parent, color, update_callback=None, tooltip=None):
         CTkToolTip(frame, tooltip)
     if update_callback:
         entry.bind("<KeyRelease>", update_callback)
+    if DEBUGLEVEL:
+        ui_logger.info(f"Creating entry field for: {label}")
     return entry
 
 def highlight_json():
@@ -108,6 +125,9 @@ def highlight_json():
         for match in re.finditer(boolean_pattern, json_text):
             start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
             textbox.tag_add("boolean", start, end)
+        
+        if DEBUGLEVEL:
+            ui_logger.info("JSON syntax highlighted.")
 
 def update_json_data(event):
     json_data['dictionaryOfDictionaries']['value']['runStats']['level'] = int(entry_level.get())
@@ -121,6 +141,8 @@ def update_json_data(event):
         json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
     textbox.delete("1.0", "end")
     textbox.insert("1.0", json.dumps(json_data, indent=4))
+    if DEBUGLEVEL:
+        ui_logger.info("JSON data updated.")
     highlight_json()
 
 def on_json_edit(event):
@@ -168,8 +190,12 @@ def on_json_edit(event):
 
         json_data = updated_data
         highlight_json()
-
+    
+        if DEBUGLEVEL:
+            ui_logger.info("JSON data updated from editor.")
     except json.JSONDecodeError:
+        if DEBUGLEVEL:
+            ui_logger.error("Failed to update JSON data from editor.")
         pass
 
 def open_file():
@@ -182,10 +208,17 @@ def open_file():
         update_ui_from_json(json_data)
         savefilename = Path(file_path).name
         messagebox.showinfo("File Opened", f"Successfully opened: {file_path}")
+        if DEBUGLEVEL:
+            ui_logger.info(f"File opened: {file_path}")
+    else:
+        if DEBUGLEVEL:
+            ui_logger.error("Failed to open file.")
 
 def save_data():
     if not json_data:
         messagebox.showerror("Error", "No data to save.")
+        if DEBUGLEVEL:
+            ui_logger.error("No data to save.")
         return
 
     file_path = filedialog.asksaveasfilename(initialdir=savefile_dir, initialfile=savefilename, defaultextension=".es3", filetypes=[("Game Save (.es3 file)", "*.es3")])
@@ -194,6 +227,11 @@ def save_data():
         with open(file_path, 'wb') as f:
             f.write(encrypted_data)
         messagebox.showinfo("File Saved", f"Successfully saved: {file_path}")
+        if DEBUGLEVEL:
+            ui_logger.info(f"File saved: {file_path}")
+    else:
+        if DEBUGLEVEL:
+            ui_logger.error("Failed to save file.")
 
 def update_ui_from_json(data):
     global players, player_entries
@@ -258,7 +296,12 @@ def update_ui_from_json(data):
                 img_data = requests.get(img_url).content
                 with open(cached_image_path, 'wb') as file:
                     file.write(img_data)
+                if DEBUGLEVEL:
+                    ui_logger.info(f"Steam profile picture for player ID: {player_id} fetched and cached.")
                 return str(cached_image_path)
+            
+        if DEBUGLEVEL:
+            ui_logger.error(f"Failed to fetch Steam profile picture for player ID: {player_id}")
 
         return "https://media.discordapp.net/attachments/964544992251084890/1350830278763085844/R.E.P.O_Save_Editor_icon.png?ex=67d82a3b&is=67d6d8bb&hm=7d2ffdd5b03ec4d77f580901d3b73f36e999bc96bcab7a8535ff999a527f2596&="
 
@@ -318,6 +361,9 @@ def update_ui_from_json(data):
         throw_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeThrow'][player['id']])
         player_entries[player['name']] = throw_upgrade_entry
 
+        if DEBUGLEVEL:
+            ui_logger.info(f"Player {player['name']} UI created.")
+
 
     frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
     frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
@@ -336,5 +382,8 @@ def update_ui_from_json(data):
     highlight_json()
     textbox.bind("<KeyRelease>", on_json_edit)
     label.pack_forget()
+
+    if DEBUGLEVEL:
+        ui_logger.info("UI updated from JSON data.")
 
 root.mainloop()
