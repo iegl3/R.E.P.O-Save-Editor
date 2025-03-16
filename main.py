@@ -10,7 +10,7 @@ from xml.etree import ElementTree
 from PIL import Image
 from pathlib import Path
 
-DEBUGLEVEL = "INFO"
+DEBUGLEVEL = None
 
 if DEBUGLEVEL:
     import logging

@@ -25,12 +25,3 @@ def decrypt_es3(file_path, password):
 
     
     return decrypted_data
-    
-
-# file_path = input("Enter the path to the encrypted file: ")
-# password = "Why would you want to cheat?... :o It's no fun. :') :'D"
-# try:
-#     decrypted_data = decrypt_es3(file_path, password)
-#     print(decrypted_data.decode('utf-8'))
-# except Exception as e:
-#     print(f"Decryption failed: {e}")
