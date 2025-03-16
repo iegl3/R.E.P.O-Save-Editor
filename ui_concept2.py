@@ -179,10 +179,10 @@ def update_ui_from_json(data):
     frame_world.pack(fill=BOTH, expand=True, padx=10, pady=10)
     
     global entry_currency, entry_lives, entry_charging, entry_haul
-    entry_currency = create_entry("Currency:", frame_world, "#292929", update_json_data)
-    entry_lives = create_entry("Lives:", frame_world, "#292929", update_json_data)
-    entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929", update_json_data)
-    entry_haul = create_entry("Total Haul:", frame_world, "#292929", update_json_data)
+    entry_currency = create_entry("Currency:", frame_world, "#292929", update_json_data, "The amount of currency the game has. In thousands.")
+    entry_lives = create_entry("Lives:", frame_world, "#292929", update_json_data, "The amount of lives the game has.")
+    entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929", update_json_data, "The amount of charge the charging station has.")
+    entry_haul = create_entry("Total Haul:", frame_world, "#292929", update_json_data, "The total haul of the game.")
     
     entry_currency.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['currency'])
     entry_lives.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['lives'])
@@ -230,13 +230,24 @@ def update_ui_from_json(data):
         image = Image.open(profile_picture_path)
         my_image = CTkImage(light_image=image, dark_image=image, size=(30, 30))
         image_label = CTkLabel(frame, image=my_image, text="")
-        image_label.pack(side="left", padx=(10, 5))
+        image_label.pack(side="left", anchor="nw", padx=(10, 5), pady=10)
         
         CTkLabel(frame, text=player['name'], font=font).pack(anchor="w", padx=5, pady=3)
-        health_entry = create_entry("Health:", frame, "#292929", update_json_data)
+        health_entry = create_entry("Health:", frame, "#292929", update_json_data, "The amount of health the player has. Max 200.")
         health_entry.insert(0, player['health'])
         player_entries[player['name']] = health_entry
-    
+
+        # Upgrades
+        upgrades_frame = CTkFrame(frame, corner_radius=6)
+        upgrades_frame.pack(fill="x", pady=3)
+        CTkLabel(upgrades_frame, text="Upgrades", font=font).pack(anchor="w", padx=10, pady=5)
+        
+        stamina_entry = create_entry("Stamina:", upgrades_frame, "#212121", update_json_data)
+        stamina_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player['id']])
+        
+        extra_jump_entry = create_entry("Extra Jump:", upgrades_frame, "#212121", update_json_data)
+        extra_jump_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player['id']])
+
     frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
     frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
     CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, pady=3)
