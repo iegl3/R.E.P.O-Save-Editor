@@ -32,16 +32,25 @@ menu = CTkTitleMenu(master=root)
 button_file = menu.add_cascade("File")
 dropdown1 = CustomDropdownMenu(widget=button_file)
 dropdown1.add_option(option="Open", command=lambda: open_file())
-dropdown1.add_option(option="Save", command=lambda: save_data())
-dropdown1.add_separator()
-sub_menu = dropdown1.add_submenu("Export As (Currently Unavailable)")
-sub_menu.add_option(option=".TXT (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
-sub_menu.add_option(option=".JSON (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
 
 label = CTkLabel(root, text="No data loaded.", font=font)
 label.pack(fill=BOTH, expand=True)
 
-label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+def get_latest_version():
+    try:
+        response = requests.get(f"https://api.github.com/repos/N0edL/R.E.P.O-Save-Editor/releases/latest", timeout=5)
+        data = response.json()
+        return data.get("tag_name", "Unknown")
+    except requests.exceptions.RequestException:
+        return "Unknown"
+
+if get_latest_version() != version:
+    if get_latest_version() == "Unknown":
+        label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+    else:
+        label_footer = CTkLabel(root, text=f"Version: {version} (Latest: {get_latest_version()}), Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+else:
+    label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
 label_footer.pack(side="bottom", pady=5)
 
 players = []
@@ -147,11 +156,18 @@ def save_data():
     if file_path:
         with open(file_path, 'w') as f:
             json.dump(json_data, f, indent=4)
+        messagebox.showinfo("File Saved", f"Successfully saved: {file_path}")
 
 def update_ui_from_json(data):
     global players, player_entries
     players.clear()
     player_entries.clear()
+
+    dropdown1.add_option(option="Save", command=lambda: save_data())
+    dropdown1.add_separator()
+    sub_menu = dropdown1.add_submenu("Export As (Currently Unavailable)")
+    sub_menu.add_option(option=".TXT (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
+    sub_menu.add_option(option=".JSON (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
     
     tabview = CTkTabview(root, width=680, height=400)
     tabview.pack(fill=BOTH, expand=True)
