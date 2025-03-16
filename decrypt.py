@@ -22,13 +22,15 @@ def decrypt_es3(file_path, password):
     # Check if the data is GZip compressed
     if decrypted_data[:2] == b'\x1f\x8b':  # GZip magic number
         decrypted_data = gzip.decompress(decrypted_data)
-    print(decrypted_data.decode('utf-8'))
-    return decrypted_data.decode('utf-8')
 
-# file_path = input("Enter the path to the encrypted file: ")
-# password = "Why would you want to cheat?... :o It's no fun. :') :'D"
-# try:
-#     decrypted_data = decrypt_es3(file_path, password)
-#     print(decrypted_data.decode('utf-8'))
-# except Exception as e:
-#     print(f"Decryption failed: {e}")
+    
+    return decrypted_data
+    
+
+file_path = input("Enter the path to the encrypted file: ")
+password = "Why would you want to cheat?... :o It's no fun. :') :'D"
+try:
+    decrypted_data = decrypt_es3(file_path, password)
+    print(decrypted_data.decode('utf-8'))
+except Exception as e:
+    print(f"Decryption failed: {e}")

@@ -99,10 +99,12 @@ def highlight_json():
             textbox.tag_add("boolean", start, end)
 
 def update_json_data(event):
+    json_data['dictionaryOfDictionaries']['value']['runStats']['level'] = int(entry_level.get())
     json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
     json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
     json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'] = int(entry_charging.get())
     json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
+    json_data['teamName']['value'] = entry_teamname.get()
     for player in players:
         player['health'] = int(player_entries[player['name']].get())
         json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
@@ -116,6 +118,9 @@ def on_json_edit(event):
     try:
         updated_data = json.loads(textbox.get("1.0", "end-1c"))
 
+        entry_level.delete(0, "end")
+        entry_level.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['level'])
+
         entry_currency.delete(0, "end")
         entry_currency.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['currency'])
 
@@ -127,6 +132,9 @@ def on_json_edit(event):
 
         entry_haul.delete(0, "end")
         entry_haul.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
+        entry_teamname.delete(0, "end")
+        entry_teamname.insert(0, updated_data['teamName']['value'])
 
         for player in players:
             new_health = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']]
@@ -177,16 +185,20 @@ def update_ui_from_json(data):
     frame_world = CTkFrame(tabview.tab("World"))
     frame_world.pack(fill=BOTH, expand=True, padx=10, pady=10)
     
-    global entry_currency, entry_lives, entry_charging, entry_haul
+    global entry_level, entry_currency, entry_lives, entry_charging, entry_haul, entry_teamname
+    entry_level = create_entry("Level:", frame_world, "#292929", update_json_data, "The level of the game.")
     entry_currency = create_entry("Currency:", frame_world, "#292929", update_json_data, "The amount of currency the game has. In thousands.")
     entry_lives = create_entry("Lives:", frame_world, "#292929", update_json_data, "The amount of lives the game has.")
     entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929", update_json_data, "The amount of charge the charging station has.")
     entry_haul = create_entry("Total Haul:", frame_world, "#292929", update_json_data, "The total haul of the game.")
-    
+    entry_teamname = create_entry("Team Name:", frame_world, "#292929", update_json_data, "The name of the team.")
+
+    entry_level.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['level'])
     entry_currency.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['currency'])
     entry_lives.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['lives'])
     entry_charging.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
     entry_haul.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+    entry_teamname.insert(0, data['teamName']['value'])
 
     frame_items = CTkFrame(frame_world, corner_radius=10)
     frame_items.pack(fill=BOTH, expand=True, pady=10)
