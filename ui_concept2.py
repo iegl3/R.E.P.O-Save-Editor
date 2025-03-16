@@ -218,7 +218,7 @@ def update_ui_from_json(data):
                     file.write(img_data)
                 return str(cached_image_path)
 
-        return "example.png"
+        return "https://media.discordapp.net/attachments/964544992251084890/1350830278763085844/R.E.P.O_Save_Editor_icon.png?ex=67d82a3b&is=67d6d8bb&hm=7d2ffdd5b03ec4d77f580901d3b73f36e999bc96bcab7a8535ff999a527f2596&="
 
     for player in players:
         frame = CTkFrame(frame_player, corner_radius=6, fg_color="#292929")
