@@ -19,7 +19,7 @@ version = "1.0.0"
 json_data = {}
 
 root = CTk()
-root.geometry("690x440")
+root.geometry("900x540")
 root.title("R.E.P.O Save Editor")
 root.iconbitmap("icon.ico")
 set_appearance_mode("dark")
