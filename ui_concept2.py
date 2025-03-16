@@ -2,6 +2,8 @@ from customtkinter import *
 from tkinter import BOTH, Text, Toplevel, filedialog, messagebox
 from lib.CTkMenuBar import *
 from lib.CTkToolTip import *
+from decrypt import decrypt_es3
+from encrypt import encrypt_es3
 from datetime import datetime
 import json
 import re
@@ -137,20 +139,30 @@ def on_json_edit(event):
         entry_teamname.insert(0, updated_data['teamName']['value'])
 
         for player in players:
-            new_health = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']]
-            player_entries[player['name']].delete(0, "end")
-            player_entries[player['name']].insert(0, new_health)
+            player_name = player['name']
+            player_id = player['id']  # This should match the Steam ID in the JSON
+
+            # Make sure the player ID exists in the JSON data
+            if player_id in updated_data['dictionaryOfDictionaries']['value']['playerHealth']:
+                health_value = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player_id]
+
+                # Ensure the UI entry exists before modifying it
+                if f"{player_name}_health" in player_entries:
+                    player_entries[f"{player_name}_health"].delete(0, "end")
+                    player_entries[f"{player_name}_health"].insert(0, health_value)
+                    
         json_data = updated_data
+        highlight_json()
 
     except json.JSONDecodeError:
         pass
 
 def open_file():
     global json_data
-    file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-    if file_path:
-        with open(file_path, 'r') as f:
-            json_data = json.load(f)
+    file_path = filedialog.askopenfilename(filetypes=[("Game Save (.es3 file)", "*.es3")])
+    if file_path:        
+        decrypted_data = decrypt_es3(file_path, "Why would you want to cheat?... :o It's no fun. :') :'D")
+        json_data = json.loads(decrypted_data)
         update_ui_from_json(json_data)
         messagebox.showinfo("File Opened", f"Successfully opened: {file_path}")
 
@@ -159,10 +171,11 @@ def save_data():
         messagebox.showerror("Error", "No data to save.")
         return
     
-    file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+    file_path = filedialog.asksaveasfilename(defaultextension=".es3", filetypes=[("Game Save (.es3 file)", "*.es3")])
     if file_path:
-        with open(file_path, 'w') as f:
-            json.dump(json_data, f, indent=4)
+        encrypted_data = encrypt_es3(json.dumps(json_data, indent=4).encode('utf-8'), "Why would you want to cheat?... :o It's no fun. :') :'D")
+        with open(file_path, 'wb') as f:
+            f.write(encrypted_data)
         messagebox.showinfo("File Saved", f"Successfully saved: {file_path}")
 
 def update_ui_from_json(data):
