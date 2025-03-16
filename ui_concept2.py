@@ -41,6 +41,9 @@ sub_menu.add_option(option=".JSON (Currently Unavailable)", command=lambda: mess
 label = CTkLabel(root, text="No data loaded.", font=font)
 label.pack(fill=BOTH, expand=True)
 
+label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+label_footer.pack(side="bottom", pady=5)
+
 players = []
 player_entries = {}
 
@@ -156,7 +159,7 @@ def update_ui_from_json(data):
     
     frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
     frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
-    CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, pady=3)
+    CTkLabel(frame_advanced, text="Edit JSON: (Sadly you can't change value's here yet :( )", font=font).pack(anchor="w", padx=5, pady=3)
     
     def highlight_json():
         """ Highlights JSON syntax in the text widget. """
