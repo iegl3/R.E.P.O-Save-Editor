@@ -59,6 +59,36 @@ def create_entry(label, parent, color, update_callback=None, tooltip=None):
         entry.bind("<KeyRelease>", update_callback)
     return entry
 
+def highlight_json():
+        """ Highlights JSON syntax in the text widget. """
+        textbox.tag_remove("key", "1.0", "end")
+        textbox.tag_remove("string", "1.0", "end")
+        textbox.tag_remove("number", "1.0", "end")
+        textbox.tag_remove("boolean", "1.0", "end")
+
+        json_text = textbox.get("1.0", "end-1c")
+
+        key_pattern = r'(\"[^\"]*\")\s*:'
+        string_pattern = r'(:\s*)("(?:\\.|[^"\\])*")'
+        number_pattern = r'(:\s*)(\d+(\.\d+)?)'
+        boolean_pattern = r'(:\s*)(true|false|null)'
+
+        for match in re.finditer(key_pattern, json_text):
+            start, end = f"1.0+{match.start()}c", f"1.0+{match.end(1)}c"
+            textbox.tag_add("key", start, end)
+
+        for match in re.finditer(string_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("string", start, end)
+
+        for match in re.finditer(number_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("number", start, end)
+
+        for match in re.finditer(boolean_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("boolean", start, end)
+
 def update_json_data(event):
     json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
     json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
@@ -69,6 +99,35 @@ def update_json_data(event):
         json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
     textbox.delete("1.0", "end")
     textbox.insert("1.0", json.dumps(json_data, indent=4))
+    highlight_json()
+
+def on_json_edit(event):
+    """ Updates the UI fields when the JSON editor is modified. """
+    global json_data
+    try:
+        updated_data = json.loads(textbox.get("1.0", "end-1c"))
+
+        entry_currency.delete(0, "end")
+        entry_currency.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['currency'])
+
+        entry_lives.delete(0, "end")
+        entry_lives.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['lives'])
+
+        entry_charging.delete(0, "end")
+        entry_charging.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
+
+        entry_haul.delete(0, "end")
+        entry_haul.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
+        for player in players:
+            new_health = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']]
+            player_entries[player['name']].delete(0, "end")
+            player_entries[player['name']].insert(0, new_health)
+
+        json_data = updated_data
+
+    except json.JSONDecodeError:
+        pass
 
 def open_file():
     global json_data
@@ -113,6 +172,11 @@ def update_ui_from_json(data):
     entry_lives.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['lives'])
     entry_charging.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
     entry_haul.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
+    frame_items = CTkFrame(frame_world, corner_radius=10)
+    frame_items.pack(fill=BOTH, expand=True, pady=10)
+    CTkLabel(frame_items, text="Items", font=font).pack(anchor="w", padx=10, pady=5)
+    CTkLabel(frame_items, text="Coming Soon", font=font, text_color="white").pack(fill=BOTH, expand=True)
     
     frame_player = CTkFrame(tabview.tab("Player"))
     frame_player.pack(fill=BOTH, expand=True, padx=10, pady=10)
@@ -159,50 +223,20 @@ def update_ui_from_json(data):
     
     frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
     frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
-    CTkLabel(frame_advanced, text="Edit JSON: (Sadly you can't change value's here yet :( )", font=font).pack(anchor="w", padx=5, pady=3)
+    CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, pady=3)
     
-    def highlight_json():
-        """ Highlights JSON syntax in the text widget. """
-        textbox.tag_remove("key", "1.0", "end")
-        textbox.tag_remove("string", "1.0", "end")
-        textbox.tag_remove("number", "1.0", "end")
-        textbox.tag_remove("boolean", "1.0", "end")
-
-        json_text = textbox.get("1.0", "end-1c")
-
-        key_pattern = r'(\"[^\"]*\")\s*:'
-        string_pattern = r'(:\s*)("(?:\\.|[^"\\])*")'
-        number_pattern = r'(:\s*)(\d+(\.\d+)?)'
-        boolean_pattern = r'(:\s*)(true|false|null)'
-
-        for match in re.finditer(key_pattern, json_text):
-            start, end = f"1.0+{match.start()}c", f"1.0+{match.end(1)}c"
-            textbox.tag_add("key", start, end)
-
-        for match in re.finditer(string_pattern, json_text):
-            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
-            textbox.tag_add("string", start, end)
-
-        for match in re.finditer(number_pattern, json_text):
-            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
-            textbox.tag_add("number", start, end)
-
-        for match in re.finditer(boolean_pattern, json_text):
-            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
-            textbox.tag_add("boolean", start, end)
-
     global textbox
     textbox = Text(frame_advanced, font=("Courier", 10), height=12, wrap="word", bg="#2b2b2b", fg="white", bd=0, highlightthickness=0, insertbackground="white")
     textbox.pack(fill=BOTH, expand=True, padx=5, pady=5)
     textbox.insert("1.0", json.dumps(json_data, indent=4))
     
-    textbox.tag_configure("key", foreground="#e06c69")      # Yellow for keys
-    textbox.tag_configure("string", foreground="#7ac379")   # Green for strings
-    textbox.tag_configure("number", foreground="#d19a5d")   # Red for numbers
-    textbox.tag_configure("boolean", foreground="#66CCFF")  # Blue for booleans
+    textbox.tag_configure("key", foreground="#e06c69")      # Keys
+    textbox.tag_configure("string", foreground="#7ac379")   # Strings
+    textbox.tag_configure("number", foreground="#d19a5d")   # Numbers
+    textbox.tag_configure("boolean", foreground="#66CCFF")  # Booleans
 
     highlight_json()
-
+    textbox.bind("<KeyRelease>", on_json_edit)
     label.pack_forget()
 
 root.mainloop()

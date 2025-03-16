@@ -50,8 +50,6 @@ sub_menu = dropdown1.add_submenu("Export As (Currently Unavailable)")
 if json_data:
     pass
 else:
-    dropdown1.disable_option("Save")
-    dropdown1.disable_option("Export As (Currently Unavailable)")
     label_no_save = CTkLabel(root, text="No Save file loaded", font=small_font, text_color="red")
     label_no_save.pack(side="bottom", pady=5)
     
