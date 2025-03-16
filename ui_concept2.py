@@ -132,7 +132,6 @@ def on_json_edit(event):
             new_health = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']]
             player_entries[player['name']].delete(0, "end")
             player_entries[player['name']].insert(0, new_health)
-
         json_data = updated_data
 
     except json.JSONDecodeError:
@@ -194,7 +193,7 @@ def update_ui_from_json(data):
     CTkLabel(frame_items, text="Items", font=font).pack(anchor="w", padx=10, pady=5)
     CTkLabel(frame_items, text="Coming Soon", font=font, text_color="white").pack(fill=BOTH, expand=True)
     
-    frame_player = CTkFrame(tabview.tab("Player"))
+    frame_player = CTkScrollableFrame(tabview.tab("Player"))
     frame_player.pack(fill=BOTH, expand=True, padx=10, pady=10)
     
     for player_id, player_name in data["playerNames"]["value"].items():
@@ -222,7 +221,7 @@ def update_ui_from_json(data):
         return "example.png"
 
     for player in players:
-        frame = CTkFrame(frame_player, corner_radius=6)
+        frame = CTkFrame(frame_player, corner_radius=6, fg_color="#292929")
         frame.pack(fill="x", pady=3)
 
         profile_picture_path = fetch_steam_profile_picture(player['id'])
@@ -232,21 +231,51 @@ def update_ui_from_json(data):
         image_label = CTkLabel(frame, image=my_image, text="")
         image_label.pack(side="left", anchor="nw", padx=(10, 5), pady=10)
         
-        CTkLabel(frame, text=player['name'], font=font).pack(anchor="w", padx=5, pady=3)
+        CTkLabel(frame, text=player['name'], font=font).pack(anchor="w", padx=5, pady=[5, 0])
+
         health_entry = create_entry("Health:", frame, "#292929", update_json_data, "The amount of health the player has. Max 200.")
         health_entry.insert(0, player['health'])
         player_entries[player['name']] = health_entry
 
-        # Upgrades
-        upgrades_frame = CTkFrame(frame, corner_radius=6)
-        upgrades_frame.pack(fill="x", pady=3)
-        CTkLabel(upgrades_frame, text="Upgrades", font=font).pack(anchor="w", padx=10, pady=5)
+        CTkLabel(frame, text="Upgrades: ", font=font).pack(anchor="w")        
+        CTkFrame(frame, width=frame.winfo_width()-10, height=2, fg_color='gray25').pack(fill="x", pady=5)
+
+        health_upgrade_entry = create_entry("Health:", frame, "#292929", update_json_data)
+        health_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeHealth'][player['id']])
+        player_entries[player['name']] = health_upgrade_entry
+
+        stamina_upgrade_entry = create_entry("Stamina:", frame, "#292929", update_json_data)
+        stamina_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player['id']])
+        player_entries[player['name']] = stamina_upgrade_entry
         
-        stamina_entry = create_entry("Stamina:", upgrades_frame, "#212121", update_json_data)
-        stamina_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player['id']])
-        
-        extra_jump_entry = create_entry("Extra Jump:", upgrades_frame, "#212121", update_json_data)
+        extra_jump_entry = create_entry("Extra Jump:", frame, "#292929", update_json_data)
         extra_jump_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player['id']])
+        player_entries[player['name']] = extra_jump_entry
+
+        lauch_upgrade_entry = create_entry("Launch:", frame, "#292929", update_json_data)
+        lauch_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeLaunch'][player['id']])
+        player_entries[player['name']] = lauch_upgrade_entry
+
+        mapplayercount_upgrade_entry = create_entry("Map Player Count:", frame, "#292929", update_json_data)
+        mapplayercount_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeMapPlayerCount'][player['id']])
+        player_entries[player['name']] = mapplayercount_upgrade_entry
+
+        speed_upgrade_entry = create_entry("Speed:", frame, "#292929", update_json_data)
+        speed_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeSpeed'][player['id']])
+        player_entries[player['name']] = speed_upgrade_entry
+
+        strength_upgrade_entry = create_entry("Strength:", frame, "#292929", update_json_data)
+        strength_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStrength'][player['id']])
+        player_entries[player['name']] = strength_upgrade_entry
+
+        range_upgrade_entry = create_entry("Range:", frame, "#292929", update_json_data)
+        range_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeRange'][player['id']])
+        player_entries[player['name']] = range_upgrade_entry
+
+        throw_upgrade_entry = create_entry("Throw:", frame, "#292929", update_json_data)
+        throw_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeThrow'][player['id']])
+        player_entries[player['name']] = throw_upgrade_entry
+
 
     frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
     frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)

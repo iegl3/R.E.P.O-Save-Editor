@@ -1,139 +1,319 @@
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
+from customtkinter import *
+from tkinter import BOTH, Text, Toplevel, filedialog, messagebox
+from lib.CTkMenuBar import *
+from lib.CTkToolTip import *
+from decrypt import decrypt_es3
+from encrypt import encrypt_es3
+from datetime import datetime
 import json
+import re
+import requests
+from xml.etree import ElementTree
+from PIL import Image
+from pathlib import Path
 
-def load_json():
-    with open("save.json", "r") as file:
-        data = json.load(file)
-    return data  # Dit kan worden vervangen door het laden van een bestand
+CACHE_DIR = Path.home() / ".cache" / "noedl.xyz"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-def save_json(data):
-    # Dit kan worden vervangen door het opslaan naar een bestand
-    with open("save.json", "w") as file:
-        json.dump(data, file, indent=4)
+print(CACHE_DIR)
+
+version = "1.0.0"
+json_data = {}
+file_name = ""
+
+root = CTk()
+root.geometry("690x440")
+root.title("R.E.P.O Save Editor")
+root.iconbitmap("icon.ico")
+set_appearance_mode("dark")
+set_default_color_theme("dark-blue")
+
+font = ("Arial", 12)
+small_font = ("Arial", 9)
+
+menu = CTkTitleMenu(master=root)
+button_file = menu.add_cascade("File")
+dropdown1 = CustomDropdownMenu(widget=button_file)
+dropdown1.add_option(option="Open", command=lambda: open_file())
+
+label = CTkLabel(root, text="No data loaded.", font=font)
+label.pack(fill=BOTH, expand=True)
+
+def get_latest_version():
+    try:
+        response = requests.get(f"https://api.github.com/repos/N0edL/R.E.P.O-Save-Editor/releases/latest", timeout=5)
+        data = response.json()
+        return data.get("tag_name", "Unknown")
+    except requests.exceptions.RequestException:
+        return "Unknown"
+
+if get_latest_version() != version:
+    if get_latest_version() == "Unknown":
+        label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+    else:
+        label_footer = CTkLabel(root, text=f"Version: {version} (Latest: {get_latest_version()}), Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+else:
+    label_footer = CTkLabel(root, text=f"Version: {version}, Copyright © {datetime.now().year} noedl.xyz", font=small_font, text_color="gray30")
+label_footer.pack(side="bottom", pady=5)
+
+players = []
+player_entries = {}
+
+def create_entry(label, parent, color, update_callback=None, tooltip=None):
+    frame = CTkFrame(parent, fg_color=color)
+    frame.pack(fill="x", pady=3)
+    CTkLabel(frame, text=label, font=font).pack(side="left", padx=5)
+    entry = CTkEntry(frame, font=font, width=100, border_color='#303030', fg_color="#292929")
+    entry.pack(side="right", padx=5)
+    if tooltip:
+        CTkToolTip(frame, tooltip)
+    if update_callback:
+        entry.bind("<KeyRelease>", update_callback)
+    return entry
+
+def highlight_json():
+        """ Highlights JSON syntax in the text widget. """
+        textbox.tag_remove("key", "1.0", "end")
+        textbox.tag_remove("string", "1.0", "end")
+        textbox.tag_remove("number", "1.0", "end")
+        textbox.tag_remove("boolean", "1.0", "end")
+
+        json_text = textbox.get("1.0", "end-1c")
+
+        key_pattern = r'(\"[^\"]*\")\s*:'
+        string_pattern = r'(:\s*)("(?:\\.|[^"\\])*")'
+        number_pattern = r'(:\s*)(\d+(\.\d+)?)'
+        boolean_pattern = r'(:\s*)(true|false|null)'
+
+        for match in re.finditer(key_pattern, json_text):
+            start, end = f"1.0+{match.start()}c", f"1.0+{match.end(1)}c"
+            textbox.tag_add("key", start, end)
+
+        for match in re.finditer(string_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("string", start, end)
+
+        for match in re.finditer(number_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("number", start, end)
+
+        for match in re.finditer(boolean_pattern, json_text):
+            start, end = f"1.0+{match.start(2)}c", f"1.0+{match.end(2)}c"
+            textbox.tag_add("boolean", start, end)
+
+def update_json_data(event):
+    json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'] = int(entry_charging.get())
+    json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
+    for player in players:
+        player['health'] = int(player_entries[player['name']].get())
+        json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
+    textbox.delete("1.0", "end")
+    textbox.insert("1.0", json.dumps(json_data, indent=4))
+    highlight_json()
+
+def on_json_edit(event):
+    """ Updates the UI fields when the JSON editor is modified. """
+    global json_data
+    try:
+        updated_data = json.loads(textbox.get("1.0", "end-1c"))
+
+        entry_currency.delete(0, "end")
+        entry_currency.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['currency'])
+
+        entry_lives.delete(0, "end")
+        entry_lives.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['lives'])
+
+        entry_charging.delete(0, "end")
+        entry_charging.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
+
+        entry_haul.delete(0, "end")
+        entry_haul.insert(0, updated_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
+
+        for player in players:
+            new_health = updated_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']]
+            player_entries[player['name']].delete(0, "end")
+            player_entries[player['name']].insert(0, new_health)
+        json_data = updated_data
+
+    except json.JSONDecodeError:
+        pass
+
+def open_file():
+    file_path = filedialog.askopenfilename(filetypes=[("ES3 Files", "*.es3")])
+    if file_path:
+        password = "Why would you want to cheat?... :o It's no fun. :') :'D"
+        if password:
+            try:
+                # Decrypt the file and handle possible encoding errors
+                decrypted_data = decrypt_es3(file_path, password)
+                
+                # Try decoding to UTF-8 first, if it fails, try ISO-8859-1
+                try:
+                    json_data = json.loads(decrypted_data)  # Assuming the decrypted data is JSON
+                except json.JSONDecodeError as e:
+                    messagebox.showerror("Error", f"Failed to decode JSON: {str(e)}")
+                    return
+                update_ui_from_json(json_data)
+                messagebox.showinfo("File Opened", f"Successfully opened: {file_path}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to open file: {str(e)}")
+
+def save_data():
+    if not json_data:
+        messagebox.showerror("Error", "No data to save.")
+        return
     
-    print("Data opgeslagen:", json.dumps(data, indent=4))
+    file_path = filedialog.asksaveasfilename(defaultextension=".es3", filetypes=[("ES3 files", "*.es3")])  # Updated file extension
+    if file_path:
+        try:
+            # Convert the json_data back to a JSON string
+            json_string = json.dumps(json_data, indent=4)
+            # Encrypt the data into .es3 format
+            encrypted_data = encrypt_es3(json_string.encode('utf-8'), "Why would you want to cheat?... :o It's no fun. :') :'D")
+            with open(file_path, 'wb') as f:
+                f.write(encrypted_data)
+            messagebox.showinfo("File Saved", f"Successfully saved: {file_path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save file: {e}")
 
-def update_run_stats():
-    level = int(entry_level.get())
-    currency = int(entry_currency.get())
-    lives = int(entry_lives.get())  # Get the value from the health (lives) input field
+def update_ui_from_json(data):
+    global players, player_entries
+    players.clear()
+    player_entries.clear()
+
+    dropdown1.add_option(option="Save", command=lambda: save_data())
+    dropdown1.add_separator()
+    sub_menu = dropdown1.add_submenu("Export As (Currently Unavailable)")
+    sub_menu.add_option(option=".TXT (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
+    sub_menu.add_option(option=".JSON (Currently Unavailable)", command=lambda: messagebox.showinfo("Error", "I told you it's not available yet. :)"))
     
-    data['dictionaryOfDictionaries']['value']['runStats']['level'] = level
-    data['dictionaryOfDictionaries']['value']['runStats']['currency'] = currency
-    data['dictionaryOfDictionaries']['value']['runStats']['lives'] = lives  # Update the lives value
+    tabview = CTkTabview(root, width=680, height=400)
+    tabview.pack(fill=BOTH, expand=True)
+    tabview.add("World")
+    tabview.add("Player")
+    tabview.add("Advanced")
     
-    # Save the player health using the ID
-    for player_id, player_name in data['playerNames']['value'].items():
-        player_health = int(entry_health[player_id].get())  # Get the health for each player
-        data['dictionaryOfDictionaries']['value']['playerHealth'][player_id] = player_health
-
-        # Save the player upgrades
-        data['dictionaryOfDictionaries']['value']['playerUpgradeHealth'][player_id] = int(entry_upgrade_health[player_id].get())
-        data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player_id] = int(entry_upgrade_stamina[player_id].get())
-        data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player_id] = int(entry_upgrade_extra_jump[player_id].get())
-
-    save_json(data)
-    messagebox.showinfo("Succes", "Gegevens opgeslagen!")
-
-def create_ui():
-    global entry_level, entry_currency, entry_lives, entry_health, entry_upgrade_health, entry_upgrade_stamina, entry_upgrade_extra_jump  # Declare all as global to use them in update_run_stats
+    frame_world = CTkFrame(tabview.tab("World"))
+    frame_world.pack(fill=BOTH, expand=True, padx=10, pady=10)
     
-    root = tk.Tk()
-    root.title("JSON Editor")
+    global entry_currency, entry_lives, entry_charging, entry_haul
+    entry_currency = create_entry("Currency:", frame_world, "#292929", update_json_data, "The amount of currency the game has. In thousands.")
+    entry_lives = create_entry("Lives:", frame_world, "#292929", update_json_data, "The amount of lives the game has.")
+    entry_charging = create_entry("Charging Station Charge's:", frame_world, "#292929", update_json_data, "The amount of charge the charging station has.")
+    entry_haul = create_entry("Total Haul:", frame_world, "#292929", update_json_data, "The total haul of the game.")
+    
+    entry_currency.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['currency'])
+    entry_lives.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['lives'])
+    entry_charging.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'])
+    entry_haul.insert(0, data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'])
 
-    # Create a Notebook (tabs container)
-    notebook = ttk.Notebook(root)
-    notebook.grid(row=0, column=0, padx=10, pady=5)
+    frame_items = CTkFrame(frame_world, corner_radius=10)
+    frame_items.pack(fill=BOTH, expand=True, pady=10)
+    CTkLabel(frame_items, text="Items", font=font).pack(anchor="w", padx=10, pady=5)
+    CTkLabel(frame_items, text="Coming Soon", font=font, text_color="white").pack(fill=BOTH, expand=True)
+    
+    frame_player = CTkScrollableFrame(tabview.tab("Player"))
+    frame_player.pack(fill=BOTH, expand=True, padx=10, pady=10)
+    
+    for player_id, player_name in data["playerNames"]["value"].items():
+        player_health = data["dictionaryOfDictionaries"]["value"]["playerHealth"][player_id]
+        players.append({"id": player_id, "name": player_name, "health": player_health})
+    
+    def fetch_steam_profile_picture(player_id):
+        """Fetch and cache Steam profile picture in the cache folder."""
+        cached_image_path = CACHE_DIR / f"{player_id}.png"
+        if cached_image_path.exists():
+            return str(cached_image_path)
 
-    # Create frames for each tab
-    game_tab = ttk.Frame(notebook)
-    player_tab = ttk.Frame(notebook)
-    advanced_tab = ttk.Frame(notebook)
+        url = f"https://steamcommunity.com/profiles/{player_id}/?xml=1"
+        response = requests.get(url)
+        if response.status_code == 200:
+            tree = ElementTree.fromstring(response.content)
+            avatar_icon = tree.find('avatarIcon')
+            if avatar_icon is not None:
+                img_url = avatar_icon.text
+                img_data = requests.get(img_url).content
+                with open(cached_image_path, 'wb') as file:
+                    file.write(img_data)
+                return str(cached_image_path)
 
-    # Add frames as tabs
-    notebook.add(game_tab, text="Game")
-    notebook.add(player_tab, text="Player")
-    notebook.add(advanced_tab, text="Advanced")
+        return "example.png"
 
-    # Game Tab UI
-    tk.Label(game_tab, text="Level:").grid(row=0, column=0, padx=10, pady=5)
-    tk.Label(game_tab, text="Currency:").grid(row=1, column=0, padx=10, pady=5)
-    tk.Label(game_tab, text="Lives (Health):").grid(row=2, column=0, padx=10, pady=5)
+    for player in players:
+        frame = CTkFrame(frame_player, corner_radius=6, fg_color="#292929")
+        frame.pack(fill="x", pady=3)
 
-    entry_level = tk.Entry(game_tab)
-    entry_level.insert(0, str(data['dictionaryOfDictionaries']['value']['runStats']['level']))
-    entry_level.grid(row=0, column=1, padx=10, pady=5)
+        profile_picture_path = fetch_steam_profile_picture(player['id'])
 
-    entry_currency = tk.Entry(game_tab)
-    entry_currency.insert(0, str(data['dictionaryOfDictionaries']['value']['runStats']['currency']))
-    entry_currency.grid(row=1, column=1, padx=10, pady=5)
-
-    entry_lives = tk.Entry(game_tab)  # New entry field for health
-    entry_lives.insert(0, str(data['dictionaryOfDictionaries']['value']['runStats']['lives']))
-    entry_lives.grid(row=2, column=1, padx=10, pady=5)
-
-    # Player Tab UI
-    player_frame = tk.Frame(player_tab)
-    player_frame.grid(row=0, column=0, padx=10, pady=5)
-
-    # Create a collapsible frame for Health, Stamina, and Upgrades
-    def create_collapsible_frame(parent, label, content_frame):
-        # Label to toggle the frame
-        frame_label = tk.Label(parent, text=label, relief="sunken", cursor="hand2")
-        frame_label.pack(fill="x", padx=5, pady=5)
+        image = Image.open(profile_picture_path)
+        my_image = CTkImage(light_image=image, dark_image=image, size=(30, 30))
+        image_label = CTkLabel(frame, image=my_image, text="")
+        image_label.pack(side="left", anchor="nw", padx=(10, 5), pady=10)
         
-        # Toggle frame visibility on label click
-        def toggle_frame():
-            if content_frame.winfo_ismapped():
-                content_frame.pack_forget()
-            else:
-                content_frame.pack(fill="x", padx=5, pady=5)
+        CTkLabel(frame, text=player['name'], font=font).pack(anchor="w", padx=5, pady=[5, 0])
+
+        health_entry = create_entry("Health:", frame, "#292929", update_json_data, "The amount of health the player has. Max 200.")
+        health_entry.insert(0, player['health'])
+        player_entries[player['name']] = health_entry
+
+        CTkLabel(frame, text="Upgrades: ", font=font).pack(anchor="w")        
+        CTkFrame(frame, width=frame.winfo_width()-10, height=2, fg_color='gray25').pack(fill="x", pady=5)
+
+        health_upgrade_entry = create_entry("Health:", frame, "#292929", update_json_data)
+        health_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeHealth'][player['id']])
+        player_entries[player['name']] = health_upgrade_entry
+
+        stamina_upgrade_entry = create_entry("Stamina:", frame, "#292929", update_json_data)
+        stamina_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player['id']])
+        player_entries[player['name']] = stamina_upgrade_entry
         
-        frame_label.bind("<Button-1>", lambda event: toggle_frame())
+        extra_jump_entry = create_entry("Extra Jump:", frame, "#292929", update_json_data)
+        extra_jump_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player['id']])
+        player_entries[player['name']] = extra_jump_entry
 
-        return content_frame
+        lauch_upgrade_entry = create_entry("Launch:", frame, "#292929", update_json_data)
+        lauch_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeLaunch'][player['id']])
+        player_entries[player['name']] = lauch_upgrade_entry
 
-    # Health Section
-    health_content_frame = tk.Frame(player_frame)
-    health_content_frame = create_collapsible_frame(player_frame, "Health", health_content_frame)
+        mapplayercount_upgrade_entry = create_entry("Map Player Count:", frame, "#292929", update_json_data)
+        mapplayercount_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeMapPlayerCount'][player['id']])
+        player_entries[player['name']] = mapplayercount_upgrade_entry
+
+        speed_upgrade_entry = create_entry("Speed:", frame, "#292929", update_json_data)
+        speed_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeSpeed'][player['id']])
+        player_entries[player['name']] = speed_upgrade_entry
+
+        strength_upgrade_entry = create_entry("Strength:", frame, "#292929", update_json_data)
+        strength_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStrength'][player['id']])
+        player_entries[player['name']] = strength_upgrade_entry
+
+        range_upgrade_entry = create_entry("Range:", frame, "#292929", update_json_data)
+        range_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeRange'][player['id']])
+        player_entries[player['name']] = range_upgrade_entry
+
+        throw_upgrade_entry = create_entry("Throw:", frame, "#292929", update_json_data)
+        throw_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeThrow'][player['id']])
+        player_entries[player['name']] = throw_upgrade_entry
+
+
+    frame_advanced = CTkFrame(tabview.tab("Advanced"), corner_radius=10)
+    frame_advanced.pack(fill=BOTH, expand=True, padx=10, pady=10)
+    CTkLabel(frame_advanced, text="Edit JSON:", font=font).pack(anchor="w", padx=5, pady=3)
     
-    entry_health = {}  # Dictionary to store the entry fields for health
-    for player_id, player_name in data['playerNames']['value'].items():
-        tk.Label(health_content_frame, text=f"{player_name} Health:").pack(side="top", anchor="w", padx=10, pady=5)
-        entry_health[player_id] = ttk.Combobox(health_content_frame, values=[str(i) for i in range(0, 201)])  # Health values between 0 and 200
-        entry_health[player_id].set(str(data['dictionaryOfDictionaries']['value']['playerHealth'][player_id]))  # Set default value
-        entry_health[player_id].pack(side="top", fill="x", padx=10, pady=5)
-
-    # Stamina Section
-    stamina_content_frame = tk.Frame(player_frame)
-    stamina_content_frame = create_collapsible_frame(player_frame, "Stamina", stamina_content_frame)
+    global textbox
+    textbox = Text(frame_advanced, font=("Courier", 10), height=12, wrap="word", bg="#2b2b2b", fg="white", bd=0, highlightthickness=0, insertbackground="white")
+    textbox.pack(fill=BOTH, expand=True, padx=5, pady=5)
+    textbox.insert("1.0", json.dumps(json_data, indent=4))
     
-    entry_upgrade_stamina = {}  # Dictionary to store the entry fields for stamina
-    for player_id, player_name in data['playerNames']['value'].items():
-        tk.Label(stamina_content_frame, text=f"{player_name} Stamina:").pack(side="top", anchor="w", padx=10, pady=5)
-        entry_upgrade_stamina[player_id] = tk.Entry(stamina_content_frame)
-        entry_upgrade_stamina[player_id].insert(0, str(data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player_id]))
-        entry_upgrade_stamina[player_id].pack(side="top", fill="x", padx=10, pady=5)
+    textbox.tag_configure("key", foreground="#e06c69")      # Keys
+    textbox.tag_configure("string", foreground="#7ac379")   # Strings
+    textbox.tag_configure("number", foreground="#d19a5d")   # Numbers
+    textbox.tag_configure("boolean", foreground="#66CCFF")  # Booleans
 
-    # Extra Jump Section
-    extra_jump_content_frame = tk.Frame(player_frame)
-    extra_jump_content_frame = create_collapsible_frame(player_frame, "Extra Jump", extra_jump_content_frame)
-    
-    entry_upgrade_extra_jump = {}  # Dictionary to store the entry fields for extra jump
-    for player_id, player_name in data['playerNames']['value'].items():
-        tk.Label(extra_jump_content_frame, text=f"{player_name} Extra Jump:").pack(side="top", anchor="w", padx=10, pady=5)
-        entry_upgrade_extra_jump[player_id] = tk.Entry(extra_jump_content_frame)
-        entry_upgrade_extra_jump[player_id].insert(0, str(data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player_id]))
-        entry_upgrade_extra_jump[player_id].pack(side="top", fill="x", padx=10, pady=5)
+    highlight_json()
+    textbox.bind("<KeyRelease>", on_json_edit)
+    label.pack_forget()
 
-    # Save button
-    btn_save = tk.Button(root, text="Opslaan", command=update_run_stats)
-    btn_save.grid(row=1, column=0, columnspan=2, pady=10)
-
-    root.mainloop()
-
-if __name__ == "__main__":
-    data = load_json()
-    create_ui()
+root.mainloop()

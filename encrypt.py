@@ -23,13 +23,13 @@ def encrypt_es3(data, password, should_gzip=False):
     # Prepend the IV to the encrypted data
     return iv + encrypted_data
 
-# Example usage
-data = input("Enter the json file path: ")
-with open(data, 'rb') as f:
-    data = f.read()
-password = "Why would you want to cheat?... :o It's no fun. :') :'D"
-encrypted_data = encrypt_es3(data, password, should_gzip=True)
+# # Example usage
+# data = input("Enter the json file path: ")
+# with open(data, 'rb') as f:
+#     data = f.read()
+# password = "Why would you want to cheat?... :o It's no fun. :') :'D"
+# encrypted_data = encrypt_es3(data, password, should_gzip=True)
 
-# Save the encrypted data to a file
-with open('encrypted_file.es3', 'wb') as f:
-    f.write(encrypted_data)
+# # Save the encrypted data to a file
+# with open('encrypted_file.es3', 'wb') as f:
+#     f.write(encrypted_data)
