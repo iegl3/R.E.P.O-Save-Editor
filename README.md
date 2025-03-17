@@ -18,16 +18,45 @@ This tool is built using `CustomTkinter`, `Pillow`, and other libraries, providi
 ## How to Use  
 
 1. **Download the latest release**:  
-   Go to the [Releases page](https://github.com/yourusername/R.E.P.O-Save-Editor/releases) and download the latest version of the tool.  
+   Go to the [Releases page](https://github.com/N0edL/R.E.P.O-Save-Editor/releases) and download the latest version of the tool.  
 
-2. **Open the save files folder**:  
-   Click on the "File" button, then choose "Open Save". The tool will automatically open in the save files directory. Select the folder of the save you want to edit, then choose the `.es3` file (not the backup version) to load. The tool will decrypt and load the data into a JSON format for editing.  
+2. **Set up the environment**:  
+   - Ensure you have [Python](https://www.python.org/downloads/) installed.  
+   - Extract the downloaded files and navigate to the project folder.  
+   - Open a terminal in the project folder and set up a virtual environment:  
+     ```sh
+     python -m venv venv
+     ```
+   - Activate the virtual environment:  
+     - On Windows:  
+       ```sh
+       venv\Scripts\activate
+       ```
+   
+   - Install dependencies:  
+     ```sh
+     pip install -r requirements.txt
+     ```
 
-3. **Edit the Data**:  
+3. **Run the tool**:  
+   Start the save editor by running:  
+   ```sh
+   python main.py
+   ```
+
+4. **Open the save files folder**:  
+   - Click on the "File" button, then choose "Open Save".  
+   - The tool will automatically open the save files directory.  
+   - Select the folder of the save you want to edit, then choose the `.es3` file (not the backup version) to load.  
+   - The tool will decrypt and load the data into a JSON format for editing.  
+
+5. **Edit the Data**:  
    Modify values such as player health, currency, or any other editable fields in the game data.  
 
-4. **Save Changes**:  
-   After making your edits, click "Save" to apply the changes directly to the `.es3` file. The modified JSON data is re-encrypted and saved back in the same format.
+6. **Save Changes**:  
+   After making your edits, click "Save" to apply the changes directly to the `.es3` file.  
+   The modified JSON data is re-encrypted and saved back in the same format.  
+
 
 ## Contributions
 
