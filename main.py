@@ -33,6 +33,12 @@ savefile_dir = Path.home() / "AppData" / "LocalLow" / "semiwork" / "Repo" / "sav
 if DEBUGLEVEL:
     logger.info("Save file directory set. Path: " + str(savefile_dir))
 
+def resource_path(relative_path):
+    """ Get the absolute path to resources (for PyInstaller compatibility) """
+    if hasattr(sys, '_MEIPASS'):  # If running from PyInstaller bundle
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 root = CTk()
 root.geometry("900x540")
 root.title("R.E.P.O Save Editor")

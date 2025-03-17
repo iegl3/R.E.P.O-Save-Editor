@@ -1,0 +1,9 @@
+# Python virtual environment
+.venv/
+
+# Build artifacts
+dist/
+build/
+
+# files
+pass
