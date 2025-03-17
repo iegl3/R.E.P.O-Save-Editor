@@ -149,9 +149,11 @@ def update_json_data(event):
         json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
         json_data['teamName']['value'] = entry_teamname.get()
     for player in players:
-        print(player['name'], player_entries[player['name']].get())
-        player['health'] = int(player_entries[player['name']].get())
-        json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
+        player_name = player['name']
+        player_id = player['id']
+        json_data["dictionaryOfDictionaries"]["value"]["playerHealth"][player_id] = int(player_entries[f"{player_name}_health"].get())
+        print(f"Checking player: {player_name} (ID: {player_id})")
+        print(f"Health for {player_name}: {player_entries[f'{player_name}_health'].get()}")
     textbox.delete("1.0", "end")
     textbox.insert("1.0", json.dumps(json_data, indent=4))
     if DEBUGLEVEL:
@@ -334,30 +336,30 @@ def update_ui_from_json(data):
 
         health_entry = create_entry("Health:", frame, "#292929", update_json_data, "The amount of health the player has. Max 200.")
         health_entry.insert(0, player['health'])
-        player_entries[player['name']] = health_entry
+        player_entries[f"{player['name']}_health"] = health_entry
 
         CTkLabel(frame, text="Upgrades: ", font=font).pack(anchor="w")        
         CTkFrame(frame, width=frame.winfo_width()-10, height=2, fg_color='gray25').pack(fill="x", pady=5)
 
         health_upgrade_entry = create_entry("Health:", frame, "#292929", update_json_data)
         health_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeHealth'][player['id']])
-        player_entries[player['name']] = health_upgrade_entry
+        player_entries[f"{player['name']}_health_upgrade"] = health_upgrade_entry
 
         stamina_upgrade_entry = create_entry("Stamina:", frame, "#292929", update_json_data)
         stamina_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeStamina'][player['id']])
-        player_entries[player['name']] = stamina_upgrade_entry
+        player_entries[f"{player['name']}_stamina_upgrade"] = stamina_upgrade_entry
         
         extra_jump_entry = create_entry("Extra Jump:", frame, "#292929", update_json_data)
         extra_jump_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeExtraJump'][player['id']])
-        player_entries[player['name']] = extra_jump_entry
+        player_entries[f"{player['name']}_extra_jump_upgrade"] = extra_jump_entry
 
         lauch_upgrade_entry = create_entry("Launch:", frame, "#292929", update_json_data)
         lauch_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeLaunch'][player['id']])
-        player_entries[player['name']] = lauch_upgrade_entry
+        player_entries[f"{player['name']}_launch_upgrade"] = lauch_upgrade_entry
 
         mapplayercount_upgrade_entry = create_entry("Map Player Count:", frame, "#292929", update_json_data)
         mapplayercount_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeMapPlayerCount'][player['id']])
-        player_entries[player['name']] = mapplayercount_upgrade_entry
+        player_entries[f"{player['name']}_mapplayercount_upgrade"] = mapplayercount_upgrade_entry
 
         speed_upgrade_entry = create_entry("Speed:", frame, "#292929", update_json_data)
         speed_upgrade_entry.insert(0, data['dictionaryOfDictionaries']['value']['playerUpgradeSpeed'][player['id']])
