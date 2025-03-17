@@ -35,7 +35,7 @@ if DEBUGLEVEL:
 
 def resource_path(relative_path):
     """ Get the absolute path to resources (for PyInstaller compatibility) """
-    if hasattr(sys, '_MEIPASS'):  # If running from PyInstaller bundle
+    if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
@@ -136,19 +136,27 @@ def highlight_json():
             ui_logger.info("JSON syntax highlighted.")
 
 def update_json_data(event):
-    json_data['dictionaryOfDictionaries']['value']['runStats']['level'] = int(entry_level.get())
-    json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
-    json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
-    json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'] = int(entry_charging.get())
-    json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
-    json_data['teamName']['value'] = entry_teamname.get()
+    if entry_level.get() == "" or entry_currency.get() == "" or entry_lives.get() == "" or entry_charging.get() == "" or entry_haul.get() == "" or entry_teamname.get() == "":
+        if DEBUGLEVEL:
+            ui_logger.info("Failed to update JSON data. One or more fields are empty.")
+        return
+    else:
+        print(entry_level.get(), entry_currency.get(), entry_lives.get(), entry_charging.get(), entry_haul.get(), entry_teamname.get())
+        json_data['dictionaryOfDictionaries']['value']['runStats']['level'] = int(entry_level.get())
+        json_data['dictionaryOfDictionaries']['value']['runStats']['currency'] = int(entry_currency.get())
+        json_data['dictionaryOfDictionaries']['value']['runStats']['lives'] = int(entry_lives.get())
+        json_data['dictionaryOfDictionaries']['value']['runStats']['chargingStationCharge'] = int(entry_charging.get())
+        json_data['dictionaryOfDictionaries']['value']['runStats']['totalHaul'] = int(entry_haul.get())
+        json_data['teamName']['value'] = entry_teamname.get()
     for player in players:
+        print(player['name'], player_entries[player['name']].get())
         player['health'] = int(player_entries[player['name']].get())
         json_data['dictionaryOfDictionaries']['value']['playerHealth'][player['id']] = player['health']
     textbox.delete("1.0", "end")
     textbox.insert("1.0", json.dumps(json_data, indent=4))
     if DEBUGLEVEL:
         ui_logger.info("JSON data updated.")
+        logger.info("JSON data: " + json.dumps(json_data, indent=4))
     highlight_json()
 
 def on_json_edit(event):
