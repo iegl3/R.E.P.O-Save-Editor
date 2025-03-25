@@ -1,4 +1,4 @@
-import json, re, requests, webbrowser
+import json, re, requests, webbrowser, platform
 from customtkinter import *
 from tkinter import BOTH, Text, Toplevel, filedialog, messagebox
 from lib.CTkMenuBar import *
@@ -49,7 +49,11 @@ set_default_color_theme("dark-blue")
 font = ("Arial", 12)
 small_font = ("Arial", 9)
 
-menu = CTkTitleMenu(master=root)
+if platform.system() == "Windows":
+    menu = CTkTitleMenu(master=root)
+else:
+    menu = CTkMenuBar(master=root)
+
 button_file = menu.add_cascade("File")
 button_help = menu.add_cascade("Help")
 dropdown1 = CustomDropdownMenu(widget=button_file)
